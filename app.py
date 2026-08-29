@@ -502,7 +502,7 @@ with col_dir:
     col_logo, col_info = st.columns([1, 3.5])
     with col_logo:
         try:
-            st.image("logo.png", width=95)
+            st.image("LOGO.png", width=95)
         except:
             st.write("🔧 **FAST AUTO**")
 
