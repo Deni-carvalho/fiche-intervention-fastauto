@@ -1,7 +1,8 @@
 from datetime import datetime
+import io
+from xhtml2pdf import pisa
 import pandas as pd
 import streamlit as st
-import streamlit.components.v1 as components
 
 st.set_page_config(
     page_title="Fast Auto 91 - Fiche d'Intervention", page_icon="🔧", layout="wide"
@@ -296,303 +297,280 @@ if "form_ot" not in st.session_state:
     st.session_state.form_km = "272 288"
     st.session_state.form_pere = "122170"
 
-if "modo_impressao" not in st.session_state:
-    st.session_state.modo_impressao = False
 
-if st.session_state.modo_impressao:
-    # CSS para ocultar a barra lateral do Streamlit e garantir que botões flutuantes sumam na impressão
-    st.markdown(
-        """
-        <style>
-            .stApp { background-color: white !important; }
-            header { visibility: hidden; }
-            @media print {
-                .no-print { display: none !important; }
-            }
-        </style>
-    """,
-        unsafe_allow_html=True,
-    )
-
-    # HTML completo integrando o botão flutuante e o script de impressão automática
-    html_ficha = f"""
-    <div class="no-print" style="position: fixed; top: 15px; right: 20px; z-index: 9999; display: flex; gap: 10px;">
-        <button onclick="window.parent.document.querySelector('section[data-testid=stSidebar]').previousSibling.querySelector('button').click();" style="background-color: #333; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; font-family: sans-serif; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">⬅️ Voltar ao Painel</button>
-        <button onclick="window.print();" style="background-color: #d32f2f; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; font-family: sans-serif; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">🖨️ Imprimer / PDF</button>
-    </div>
-
-    <div style="background: white; padding: 20px; font-family: sans-serif; color: black; max-width: 800px; margin: auto; margin-top: 40px;">
-        <div style="display: flex; align-items: center; border-bottom: 2px solid #d32f2f; padding-bottom: 10px; margin-bottom: 15px;">
-            <div style="font-size: 20px; font-weight: bold; color: #d32f2f;">FAST AUTO 91 — RAPPORT D'INTERVENTION</div>
-        </div>
-        <div style="font-size: 11px; color: #444; margin-bottom: 15px;">
-            MÉCANIQUE V.L - P.L | Intervention sur site<br/>6 rue Gustave Madiot, 91070 Bondoufle
-        </div>
-        
-        <table style="width: 100%; font-size: 11pt; border-collapse: collapse; margin-bottom: 20px;">
-            <tr>
-                <td style="padding: 4px 0;"><b>Client / Réseau :</b> {st.session_state.form_client}</td>
-                <td style="padding: 4px 0;"><b>N° d'OT :</b> <span style="color: #d32f2f;">{st.session_state.form_ot}</span></td>
-            </tr>
-            <tr>
-                <td style="padding: 4px 0;"><b>Type d'intervention :</b> {st.session_state.form_type}</td>
-                <td style="padding: 4px 0;"><b>Date :</b> {st.session_state.form_date}</td>
-            </tr>
-            <tr>
-                <td style="padding: 4px 0;"><b>Châssis (N° de parc) :</b> <b>{st.session_state.form_chassis}</b></td>
-                <td style="padding: 4px 0;"><b>Équipement père :</b> {st.session_state.form_pere}</td>
-            </tr>
-            <tr>
-                <td style="padding: 4px 0;"><b>Immatriculation / VIN :</b> {st.session_state.form_immat}</td>
-                <td style="padding: 4px 0;"><b>Kilométrage :</b> {st.session_state.form_km}</td>
-            </tr>
-        </table>
-
-        <h4 style="border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 20px;">Contrôles et Observations (Sélectionnés)</h4>
-        
-        <table style="width: 100%; border-collapse: collapse; font-size: 10pt; margin-top: 10px;">
-            <thead>
-                <tr style="background-color: #f2f2f2; border-bottom: 1px solid #ddd;">
-                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left; width: 60%;">Activités (Ce qu'il y a à faire)</th>
-                    <th style="border: 1px solid #ddd; padding: 8px; text-align: center; width: 15%;">Fait ? ([ X ])</th>
-                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left; width: 25%;">Remarques / Observations</th>
-                </tr>
-            </thead>
-            <tbody>
-    """
-
+def gerar_pdf_bytes():
+    linhas_tabela = ""
     if st.session_state.selecionados:
-        for item_text in st.session_state.selecionados:
-            html_ficha += f"""
+        for item in st.session_state.selecionados:
+            linhas_tabela += f"""
                 <tr>
-                    <td style="border: 1px solid #ddd; padding: 8px;">{item_text}</td>
-                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;"></td>
-                    <td style="border: 1px solid #ddd; padding: 8px;"></td>
+                    <td style="border: 1px solid #ddd; padding: 6px;">{item}</td>
+                    <td style="border: 1px solid #ddd; padding: 6px; text-align: center;"></td>
+                    <td style="border: 1px solid #ddd; padding: 6px;"></td>
                 </tr>
             """
     else:
-        html_ficha += """
+        linhas_tabela = """
                 <tr>
-                    <td colspan="3" style="border: 1px solid #ddd; padding: 12px; text-align: center; color: #666;">Aucun contrôle sélectionné.</td>
+                    <td colspan="3" style="border: 1px solid #ddd; padding: 10px; text-align: center; color: #666;">Aucun contrôle sélectionné.</td>
                 </tr>
         """
 
-    html_ficha += """
+    html_content = f"""
+    <html>
+    <head>
+    <style>
+        @page {{
+            size: A4;
+            margin: 1cm;
+        }}
+        body {{
+            font-family: Helvetica, Arial, sans-serif;
+            color: #000;
+            font-size: 10pt;
+        }}
+    </style>
+    </head>
+    <body>
+        <div style="border-bottom: 2px solid #d32f2f; padding-bottom: 5px; margin-bottom: 10px;">
+            <div style="font-size: 16px; font-weight: bold; color: #d32f2f;">FAST AUTO 91 — RAPPORT D'INTERVENTION</div>
+        </div>
+        <div style="font-size: 9pt; color: #444; margin-bottom: 15px;">
+            MÉCANIQUE V.L - P.L | Intervention sur site<br/>6 rue Gustave Madiot, 91070 Bondoufle
+        </div>
+        
+        <table style="width: 100%; font-size: 9pt; border-collapse: collapse; margin-bottom: 15px;">
+            <tr>
+                <td style="padding: 3px 0;"><b>Client / Réseau :</b> {st.session_state.form_client}</td>
+                <td style="padding: 3px 0;"><b>N° d'OT :</b> <span style="color: #d32f2f;">{st.session_state.form_ot}</span></td>
+            </tr>
+            <tr>
+                <td style="padding: 3px 0;"><b>Type d'intervention :</b> {st.session_state.form_type}</td>
+                <td style="padding: 3px 0;"><b>Date :</b> {st.session_state.form_date}</td>
+            </tr>
+            <tr>
+                <td style="padding: 3px 0;"><b>Châssis (N° de parc) :</b> <b>{st.session_state.form_chassis}</b></td>
+                <td style="padding: 3px 0;"><b>Équipement père :</b> {st.session_state.form_pere}</td>
+            </tr>
+            <tr>
+                <td style="padding: 3px 0;"><b>Immatriculation / VIN :</b> {st.session_state.form_immat}</td>
+                <td style="padding: 3px 0;"><b>Kilométrage :</b> {st.session_state.form_km}</td>
+            </tr>
+        </table>
+
+        <h4 style="border-bottom: 1px solid #ccc; padding-bottom: 3px; margin-top: 15px; font-size: 11pt;">Contrôles et Observations (Sélectionnés)</h4>
+        
+        <table style="width: 100%; border-collapse: collapse; font-size: 9pt; margin-top: 5px;">
+            <thead>
+                <tr style="background-color: #f2f2f2;">
+                    <th style="border: 1px solid #ddd; padding: 6px; text-align: left; width: 60%;">Activités (Ce qu'il y a à faire)</th>
+                    <th style="border: 1px solid #ddd; padding: 6px; text-align: center; width: 15%;">Fait ? ([ X ])</th>
+                    <th style="border: 1px solid #ddd; padding: 6px; text-align: left; width: 25%;">Remarques / Observations</th>
+                </tr>
+            </thead>
+            <tbody>
+                {linhas_tabela}
             </tbody>
         </table>
 
-        <table style="width: 100%; margin-top: 40px; border-collapse: collapse;">
+        <table style="width: 100%; margin-top: 30px; border-collapse: collapse;">
             <tr>
-                <td style="border: 1px solid #bbb; padding: 10px; width: 48%; height: 60px; vertical-align: top; font-size: 10pt;">
+                <td style="border: 1px solid #bbb; padding: 8px; width: 48%; height: 50px; vertical-align: top; font-size: 9pt;">
                     <b>Visa du Technicien / Fast Auto 91</b>
                 </td>
                 <td style="width: 4%;"></td>
-                <td style="border: 1px solid #bbb; padding: 10px; width: 48%; height: 60px; vertical-align: top; font-size: 10pt;">
+                <td style="border: 1px solid #bbb; padding: 8px; width: 48%; height: 50px; vertical-align: top; font-size: 9pt;">
                     <b>Visa du Client / Exploitation</b>
                 </td>
             </tr>
         </table>
-    </div>
+    </body>
+    </html>
     """
 
-    components.html(html_ficha, height=950, scrolling=True)
+    pdf_buffer = io.BytesIO()
+    pisa_status = pisa.CreatePDF(
+        io.BytesIO(html_content.encode("utf-8")), dest=pdf_buffer
+    )
 
-    # Dispara a impressão via script, mas o CSS `@media print` garante que os botões flutuantes suma do PDF gerado.
+    if pisa_status.err:
+        return None
+    return pdf_buffer.getvalue()
+
+
+col_esq, col_dir = st.columns([1, 1.3], gap="large")
+
+with col_esq:
+    st.markdown("### 🔧 Fast Auto 91 — Sélection des Contrôles")
+
+    if st.button("🔄 Réinitialiser la Fiche (Tout Effacer)", type="primary"):
+        st.session_state.selecionados = []
+        st.session_state.form_ot = ""
+        st.session_state.form_chassis = ""
+        st.session_state.form_immat = ""
+        st.session_state.form_km = ""
+        st.session_state.form_pere = ""
+        st.rerun()
+
+    with st.expander("📝 Informations Générales du Véhicule", expanded=True):
+        st.session_state.form_ot = st.text_input(
+            "N° d'OT / Intervention", st.session_state.form_ot
+        )
+        st.session_state.form_client = st.text_input(
+            "Client / Réseau", st.session_state.form_client
+        )
+        st.session_state.form_type = st.text_input(
+            "Type d'Intervention", st.session_state.form_type
+        )
+        st.session_state.form_date = st.text_input(
+            "Date d'intervention", st.session_state.form_date
+        )
+
+        c1, c2 = st.columns(2)
+        with c1:
+            st.session_state.form_chassis = st.text_input(
+                "Châssis (N° de parc)", st.session_state.form_chassis
+            )
+            st.session_state.form_immat = st.text_input(
+                "Immatriculation / VIN", st.session_state.form_immat
+            )
+        with c2:
+            st.session_state.form_km = st.text_input(
+                "Kilométrage", st.session_state.form_km
+            )
+            st.session_state.form_pere = st.text_input(
+                "Équipement père", st.session_state.form_pere
+            )
+
+    st.markdown("---")
+    st.markdown("### ➕ Ajouter un service à la fiche")
+
+    filtro_busca = st.text_input("🔍 Rechercher un contrôle dans le catalogue...", "")
+
+    itens_filtrados = [
+        item
+        for item in catalogue_services
+        if filtro_busca.lower() in item.lower()
+        and item not in st.session_state.selecionados
+    ]
+
+    container_scroll = st.container(height=300)
+    with container_scroll:
+        if not itens_filtrados:
+            st.info("Tous les services filtrés ont déjà été ajoutés.")
+        for item in itens_filtrados:
+            col_btn, col_txt = st.columns([1, 8])
+            if col_btn.button("➕", key=f"add_{item}"):
+                st.session_state.selecionados.append(item)
+                st.rerun()
+            col_txt.markdown(f"<small>{item}</small>", unsafe_allow_html=True)
+
+    st.markdown("---")
+    st.markdown("### 🗑️ Retirer de la fiche")
+    if not st.session_state.selecionados:
+        st.write("Aucun contrôle sélectionné.")
+
+    for idx, item_sel in enumerate(st.session_state.selecionados):
+        col_item, col_rem = st.columns([4, 1])
+        col_item.text(f"• {item_sel[:30]}...")
+        if col_rem.button("Retirer", key=f"rm_{idx}"):
+            st.session_state.selecionados.pop(idx)
+            st.rerun()
+
+with col_dir:
+    pdf_bytes = gerar_pdf_bytes()
+    if pdf_bytes:
+        st.download_button(
+            label="📥 Télécharger le PDF Officiel",
+            data=pdf_bytes,
+            file_name=f"Rapport_Intervention_{st.session_state.form_ot}.pdf",
+            mime="application/pdf",
+            type="primary",
+            use_container_width=True,
+        )
+    else:
+        st.error("Erro ao gerar o PDF. Verifique se a biblioteca xhtml2pdf está instalada.")
+
     st.markdown(
-        """
-        <script>
-            window.print();
-        </script>
+        "<div style='border: 1px solid #ccc; padding: 20px; background: white; border-radius: 5px; margin-top: 10px;'>",
+        unsafe_allow_html=True,
+    )
+
+    col_logo, col_info = st.columns([1, 3.5])
+    with col_logo:
+        try:
+            st.image("input_file_8.png", width=95)
+        except:
+            st.write("🔧 **FAST AUTO**")
+
+    with col_info:
+        st.markdown(
+            "<p style='font-size: 18px; font-weight: bold; color: #d32f2f; text-transform: uppercase; margin-bottom: 0px;'>FAST AUTO 91 — RAPPORT D'INTERVENTION</p>",
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            "<p style='font-size: 12px; color: #444; margin-bottom: 10px;'>MÉCANIQUE V.L - P.L | Intervention sur site<br/>6 rue Gustave Madiot, 91070 Bondoufle</p>",
+            unsafe_allow_html=True,
+        )
+
+    st.markdown(
+        f"""
+    <hr style='margin: 5px 0 10px 0;'>
+    <table style='width: 100%; font-size: 10pt;'>
+        <tr>
+            <td><b>Client / Réseau :</b> {st.session_state.form_client}</td>
+            <td><b>N° d'OT :</b> <span style='color: #d32f2f;'>{st.session_state.form_ot}</span></td>
+        </tr>
+        <tr>
+            <td><b>Type d'intervention :</b> {st.session_state.form_type}</td>
+            <td><b>Date :</b> {st.session_state.form_date}</td>
+        </tr>
+        <tr>
+            <td><b>Châssis (N° de parc) :</b> <b>{st.session_state.form_chassis}</b></td>
+            <td><b>Équipement père :</b> {st.session_state.form_pere}</td>
+        </tr>
+        <tr>
+            <td><b>Immatriculation / VIN :</b> {st.session_state.form_immat}</td>
+            <td><b>Kilométrage :</b> {st.session_state.form_km}</td>
+        </tr>
+    </table>
+    <hr style='margin: 10px 0;'>
     """,
         unsafe_allow_html=True,
     )
 
-    # Botão de segurança na lateral do Streamlit caso precise voltar manualmente
-    if st.button("⬅️ Voltar ao Painel Principal"):
-        st.session_state.modo_impressao = False
-        st.rerun()
+    st.markdown("#### Contrôles et Observations (Sélectionnés)")
 
-else:
-    col_esq, col_dir = st.columns([1, 1.3], gap="large")
+    dados_tabela = []
+    for i, item_text in enumerate(st.session_state.selecionados):
+        dados_tabela.append({
+            "Activités (Ce qu'il y a à faire)": item_text,
+            "Fait ? ([ X ])": "",
+            "Remarques / Observations": "",
+        })
 
-    with col_esq:
-        st.markdown("### 🔧 Fast Auto 91 — Sélection des Contrôles")
-
-        if st.button("🔄 Réinitialiser la Fiche (Tout Effacer)", type="primary"):
-            st.session_state.selecionados = []
-            st.session_state.form_ot = ""
-            st.session_state.form_chassis = ""
-            st.session_state.form_immat = ""
-            st.session_state.form_km = ""
-            st.session_state.form_pere = ""
-            st.rerun()
-
-        with st.expander("📝 Informations Générales du Véhicule", expanded=True):
-            st.session_state.form_ot = st.text_input(
-                "N° d'OT / Intervention", st.session_state.form_ot
-            )
-            st.session_state.form_client = st.text_input(
-                "Client / Réseau", st.session_state.form_client
-            )
-            st.session_state.form_type = st.text_input(
-                "Type d'Intervention", st.session_state.form_type
-            )
-            st.session_state.form_date = st.text_input(
-                "Date d'intervention", st.session_state.form_date
-            )
-
-            c1, c2 = st.columns(2)
-            with c1:
-                st.session_state.form_chassis = st.text_input(
-                    "Châssis (N° de parc)", st.session_state.form_chassis
-                )
-                st.session_state.form_immat = st.text_input(
-                    "Immatriculation / VIN", st.session_state.form_immat
-                )
-            with c2:
-                st.session_state.form_km = st.text_input(
-                    "Kilométrage", st.session_state.form_km
-                )
-                st.session_state.form_pere = st.text_input(
-                    "Équipement père", st.session_state.form_pere
-                )
-
-        st.markdown("---")
-        st.markdown("### ➕ Ajouter un service à la fiche")
-
-        filtro_busca = st.text_input(
-            "🔍 Rechercher un contrôle dans le catalogue...", ""
+    if dados_tabela:
+        df_exibicao = pd.DataFrame(dados_tabela)
+        st.table(df_exibicao)
+    else:
+        st.warning(
+            "Aucun contrôle ajouté pour le moment. Veuillez en sélectionner dans la colonne de gauche."
         )
 
-        itens_filtrados = [
-            item
-            for item in catalogue_services
-            if filtro_busca.lower() in item.lower()
-            and item not in st.session_state.selecionados
-        ]
-
-        container_scroll = st.container(height=300)
-        with container_scroll:
-            if not itens_filtrados:
-                st.info("Tous les services filtrés ont déjà été ajoutés.")
-            for item in itens_filtrados:
-                col_btn, col_txt = st.columns([1, 8])
-                if col_btn.button("➕", key=f"add_{item}"):
-                    st.session_state.selecionados.append(item)
-                    st.rerun()
-                col_txt.markdown(f"<small>{item}</small>", unsafe_allow_html=True)
-
-        st.markdown("---")
-        st.markdown("### 🗑️ Retirer de la fiche")
-        if not st.session_state.selecionados:
-            st.write("Aucun contrôle sélectionné.")
-
-        for idx, item_sel in enumerate(st.session_state.selecionados):
-            col_item, col_rem = st.columns([4, 1])
-            col_item.text(f"• {item_sel[:30]}...")
-            if col_rem.button("Retirer", key=f"rm_{idx}"):
-                st.session_state.selecionados.pop(idx)
-                st.rerun()
-
-    with col_dir:
-        if st.button(
-            "🖨️ Générer la Fiche Propre pour Impression / PDF",
-            type="primary",
-            use_container_width=True,
-        ):
-            st.session_state.modo_impressao = True
-            st.rerun()
-
-        st.markdown(
-            "<div style='border: 1px solid #ccc; padding: 20px; background:"
-            " white; border-radius: 5px;'>",
-            unsafe_allow_html=True,
-        )
-
-        col_logo, col_info = st.columns([1, 3.5])
-        with col_logo:
-            try:
-                st.image("input_file_8.png", width=95)
-            except:
-                st.write("🔧 **FAST AUTO**")
-
-        with col_info:
-            st.markdown(
-                (
-                    "<p style='font-size: 18px; font-weight: bold; color:"
-                    " #d32f2f; text-transform: uppercase; margin-bottom: 0px;'>FAST"
-                    " AUTO 91 — RAPPORT D'INTERVENTION</p>"
-                ),
-                unsafe_allow_html=True,
-            )
-            st.markdown(
-                (
-                    "<p style='font-size: 12px; color: #444; margin-bottom:"
-                    " 10px;'>MÉCANIQUE V.L - P.L | Intervention sur site<br/>6"
-                    " rue Gustave Madiot, 91070 Bondoufle</p>"
-                ),
-                unsafe_allow_html=True,
-            )
-
-        st.markdown(
-            f"""
-        <hr style='margin: 5px 0 10px 0;'>
-        <table style='width: 100%; font-size: 10pt;'>
-            <tr>
-                <td><b>Client / Réseau :</b> {st.session_state.form_client}</td>
-                <td><b>N° d'OT :</b> <span style='color: #d32f2f;'>{st.session_state.form_ot}</span></td>
-            </tr>
-            <tr>
-                <td><b>Type d'intervention :</b> {st.session_state.form_type}</td>
-                <td><b>Date :</b> {st.session_state.form_date}</td>
-            </tr>
-            <tr>
-                <td><b>Châssis (N° de parc) :</b> <b>{st.session_state.form_chassis}</b></td>
-                <td><b>Équipement père :</b> {st.session_state.form_pere}</td>
-            </tr>
-            <tr>
-                <td><b>Immatriculation / VIN :</b> {st.session_state.form_immat}</td>
-                <td><b>Kilométrage :</b> {st.session_state.form_km}</td>
-            </tr>
-        </table>
-        <hr style='margin: 10px 0;'>
-        """,
-            unsafe_allow_html=True,
-        )
-
-        st.markdown("#### Contrôles et Observations (Sélectionnés)")
-
-        dados_tabela = []
-        for i, item_text in enumerate(st.session_state.selecionados):
-            dados_tabela.append({
-                "Activités (Ce qu'il y a à faire)": item_text,
-                "Fait ? ([ X ])": "",
-                "Remarques / Observations": "",
-            })
-
-        if dados_tabela:
-            df_exibicao = pd.DataFrame(dados_tabela)
-            st.table(df_exibicao)
-        else:
-            st.warning(
-                "Aucun contrôle ajouté pour le moment. Veuillez en sélectionner dans"
-                " la colonne de gauche."
-            )
-
-        st.markdown(
-            """
-        <table style='width: 100%; margin-top: 25px; border-collapse: collapse;'>
-            <tr>
-                <td style='border: 1px solid #bbb; padding: 10px; width: 48%; height: 50px; vertical-align: top;'>
-                    <b>Visa du Technicien / Fast Auto 91</b>
-                </td>
-                <td style='width: 4%;'></td>
-                <td style='border: 1px solid #bbb; padding: 10px; width: 48%; height: 50px; vertical-align: top;'>
-                    <b>Visa du Client / Exploitation</b>
-                </td>
-            </tr>
-        </table>
-        </div>
-        """,
-            unsafe_allow_html=True,
-        )
+    st.markdown(
+        """
+    <table style='width: 100%; margin-top: 25px; border-collapse: collapse;'>
+        <tr>
+            <td style='border: 1px solid #bbb; padding: 10px; width: 48%; height: 50px; vertical-align: top;'>
+                <b>Visa du Technicien / Fast Auto 91</b>
+            </td>
+            <td style='width: 4%;'></td>
+            <td style='border: 1px solid #bbb; padding: 10px; width: 48%; height: 50px; vertical-align: top;'>
+                <b>Visa du Client / Exploitation</b>
+            </td>
+        </tr>
+    </table>
+    </div>
+    """,
+        unsafe_allow_html=True,
+    )
