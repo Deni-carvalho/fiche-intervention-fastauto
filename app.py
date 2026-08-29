@@ -68,14 +68,8 @@ catalogue_services = [
         "270 - Ext Vhl / Carrosserie : Contrôle des vérins de soute / trappe de"
         " maintenance"
     ),
-    (
-        "290 - Ext Vhl / Pneumatiques : Contrôle état général pneus, Enjoliveur"
-        " et pression"
-    ),
-    (
-        "300 - Ext Vhl / Pneumatiques : Contrôle présence Témoins et Resserrer"
-        " si besoin"
-    ),
+    "290 - Ext Vhl / Pneumatiques : Contrôle état général pneus, Enjoliveur et pression",
+    "300 - Ext Vhl / Pneumatiques : Contrôle présence Témoins et Resserrer si besoin",
     "310 - Poste CONDUC : Passage à la valise, lecture et effacement des défauts",
     "320 - Poste CONDUC : Contrôle état et Fonctionnement du siège conducteur",
     "330 - Poste CONDUC : Contrôle état et Fonctionnement des Pare-soleils",
@@ -333,12 +327,20 @@ def gerar_pdf_bytes():
     </style>
     </head>
     <body>
-        <div style="border-bottom: 2px solid #d32f2f; padding-bottom: 5px; margin-bottom: 10px;">
-            <div style="font-size: 16px; font-weight: bold; color: #d32f2f;">FAST AUTO 91 &mdash; RAPPORT D'INTERVENTION</div>
-        </div>
-        <div style="font-size: 9pt; color: #444; margin-bottom: 15px;">
-            MÉCANIQUE V.L - P.L | Intervention sur site<br/>6 rue Gustave Madiot, 91070 Bondoufle
-        </div>
+        <table style="width: 100%; margin-bottom: 10px; border-collapse: collapse;">
+            <tr>
+                <td style="width: 20%; vertical-align: middle;">
+                    <img src="logo.png" width="90"/>
+                </td>
+                <td style="width: 80%; vertical-align: middle;">
+                    <div style="font-size: 15px; font-weight: bold; color: #d32f2f;">FAST AUTO 91 &mdash; RAPPORT D'INTERVENTION</div>
+                    <div style="font-size: 8.5pt; color: #444; margin-top: 2px;">
+                        MÉCANIQUE V.L - P.L | Intervention sur site<br/>6 rue Gustave Madiot, 91070 Bondoufle
+                    </div>
+                </td>
+            </tr>
+        </table>
+        <hr style="border: none; border-bottom: 2px solid #d32f2f; margin-bottom: 12px;"/>
         
         <table style="width: 100%; font-size: 9pt; border-collapse: collapse; margin-bottom: 15px;">
             <tr>
@@ -500,7 +502,7 @@ with col_dir:
     col_logo, col_info = st.columns([1, 3.5])
     with col_logo:
         try:
-            st.image("input_file_8.png", width=95)
+            st.image("logo.png", width=95)
         except:
             st.write("🔧 **FAST AUTO**")
 
