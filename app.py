@@ -18,12 +18,34 @@ st.markdown("""
         color: #444;
         margin-bottom: 10px;
     }
+    
+    /* --- CONFIGURAÇÃO DE IMPRESSÃO LIMPA (APENAS A FICHA) --- */
     @media print {
-        .no-print {
+        /* Oculta elementos indesejados da interface do Streamlit e a coluna esquerda */
+        #MainMenu, header, footer, .no-print, div[data-testid="stSidebar"] {
             display: none !important;
         }
+        
+        /* Oculta tudo exceto a coluna da direita contendo a ficha */
+        section.main > div:first-child {
+            display: none !important;
+        }
+        
+        /* Força a área da ficha a ocupar 100% da tela de impressão sem margens sobrando */
         body {
-            background-color: white;
+            background-color: white !important;
+            color: black !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        
+        .printable-sheet {
+            border: none !important;
+            padding: 0 !important;
+            width: 100% !important;
+            position: absolute;
+            left: 0;
+            top: 0;
         }
     }
 </style>
@@ -243,7 +265,6 @@ with col_esq:
     
     filtro_busca = st.text_input("🔍 Rechercher un contrôle dans le catalogue...", "")
     
-    # Itens disponíveis são todos do catálogo menos os já selecionados (permite retornar para a esquerda ao remover)
     itens_filtrados = [
         item for item in catalogue_services 
         if filtro_busca.lower() in item.lower() and item not in st.session_state.selecionados
@@ -275,7 +296,13 @@ with col_esq:
     st.markdown('</div>', unsafe_allow_html=True)
 
 with col_dir:
-    st.markdown("<div style='border: 1px solid #ccc; padding: 20px; background: white; border-radius: 5px;'>", unsafe_allow_html=True)
+    # Botão direto para acionar a impressão apenas da ficha
+    st.markdown('<div class="no-print">', unsafe_allow_html=True)
+    if st.button("🖨️ Imprimer la Fiche d'Intervention", type="primary", use_container_width=True):
+        st.markdown('<script>window.print();</script>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown("<div class='printable-sheet' style='border: 1px solid #ccc; padding: 20px; background: white; border-radius: 5px;'>", unsafe_allow_html=True)
     
     col_logo, col_info = st.columns([1, 3.5])
     with col_logo:
@@ -316,8 +343,10 @@ with col_dir:
     dados_tabela = []
     for i, item_text in enumerate(st.session_state.selecionados):
         col_f1, col_f2 = st.columns([1, 2])
-        status_str = st.selectbox("Fait?", ["[ X ]", "[ &nbsp; ]"], key=f"st_{i}", label_visibility="collapsed")
-        rem_str = st.text_input("Remarque", value="RAS", key=f"rem_{i}", label_visibility="collapsed")
+        # Campo "Fait?" com espaço em branco como primeira opção padrão
+        status_str = st.selectbox("Fait?", ["", "[ X ]", "[ &nbsp; ]"], key=f"st_{i}", label_visibility="collapsed")
+        # Campo "Remarques / Observations" totalmente em branco por padrão
+        rem_str = st.text_input("Remarque", value="", key=f"rem_{i}", label_visibility="collapsed")
 
         dados_tabela.append({
             "Activités (Ce qu'il y a à faire)": item_text,
@@ -346,4 +375,4 @@ with col_dir:
     </div>
     """, unsafe_allow_html=True)
 
-    st.info("💡 **Prêt pour impression :** Appuyez sur **Ctrl + P** pour imprimer ou enregistrer le PDF.")
+    st.info("💡 **Prêt pour impression :** Appuyez sur le bouton **Imprimer la Fiche d'Intervention** acima ou use **Ctrl + P**.")
