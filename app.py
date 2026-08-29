@@ -300,22 +300,28 @@ if "modo_impressao" not in st.session_state:
     st.session_state.modo_impressao = False
 
 if st.session_state.modo_impressao:
-    if st.button("⬅️ Voltar ao Painel Principal"):
-        st.session_state.modo_impressao = False
-        st.rerun()
-
+    # CSS para ocultar a barra lateral do Streamlit e garantir que botões flutuantes sumam na impressão
     st.markdown(
         """
         <style>
             .stApp { background-color: white !important; }
             header { visibility: hidden; }
+            @media print {
+                .no-print { display: none !important; }
+            }
         </style>
     """,
         unsafe_allow_html=True,
     )
 
+    # HTML completo integrando o botão flutuante e o script de impressão automática
     html_ficha = f"""
-    <div style="background: white; padding: 20px; font-family: sans-serif; color: black; max-width: 800px; margin: auto;">
+    <div class="no-print" style="position: fixed; top: 15px; right: 20px; z-index: 9999; display: flex; gap: 10px;">
+        <button onclick="window.parent.document.querySelector('section[data-testid=stSidebar]').previousSibling.querySelector('button').click();" style="background-color: #333; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; font-family: sans-serif; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">⬅️ Voltar ao Painel</button>
+        <button onclick="window.print();" style="background-color: #d32f2f; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; font-family: sans-serif; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">🖨️ Imprimer / PDF</button>
+    </div>
+
+    <div style="background: white; padding: 20px; font-family: sans-serif; color: black; max-width: 800px; margin: auto; margin-top: 40px;">
         <div style="display: flex; align-items: center; border-bottom: 2px solid #d32f2f; padding-bottom: 10px; margin-bottom: 15px;">
             <div style="font-size: 20px; font-weight: bold; color: #d32f2f;">FAST AUTO 91 — RAPPORT D'INTERVENTION</div>
         </div>
@@ -389,8 +395,9 @@ if st.session_state.modo_impressao:
     </div>
     """
 
-    components.html(html_ficha, height=900, scrolling=True)
+    components.html(html_ficha, height=950, scrolling=True)
 
+    # Dispara a impressão via script, mas o CSS `@media print` garante que os botões flutuantes suma do PDF gerado.
     st.markdown(
         """
         <script>
@@ -399,6 +406,11 @@ if st.session_state.modo_impressao:
     """,
         unsafe_allow_html=True,
     )
+
+    # Botão de segurança na lateral do Streamlit caso precise voltar manualmente
+    if st.button("⬅️ Voltar ao Painel Principal"):
+        st.session_state.modo_impressao = False
+        st.rerun()
 
 else:
     col_esq, col_dir = st.columns([1, 1.3], gap="large")
