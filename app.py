@@ -295,11 +295,9 @@ if "form_ot" not in st.session_state:
     st.session_state.form_km = "272 288"
     st.session_state.form_pere = "122170"
 
-# Controle de visualização da Ficha isolada para impressão/PDF limpo
 if "modo_impressao" not in st.session_state:
     st.session_state.modo_impressao = False
 
-# Se o modo de impressão estiver ativo, exibimos APENAS a ficha de forma limpa em tela cheia
 if st.session_state.modo_impressao:
     if st.button("⬅️ Voltar ao Painel Principal"):
         st.session_state.modo_impressao = False
@@ -308,7 +306,6 @@ if st.session_state.modo_impressao:
     st.markdown(
         """
         <style>
-            /* Força fundo branco e remove elementos extras do Streamlit na visualização isolada */
             .stApp { background-color: white !important; }
             header { visibility: hidden; }
         </style>
@@ -316,7 +313,6 @@ if st.session_state.modo_impressao:
         unsafe_allow_html=True,
     )
 
-    # Montagem do HTML puro e limpo da Ficha para impressão direta
     html_ficha = f"""
     <div style="background: white; padding: 20px; font-family: sans-serif; color: black; max-width: 800px; margin: auto;">
         <div style="display: flex; align-items: center; border-bottom: 2px solid #d32f2f; padding-bottom: 10px; margin-bottom: 15px;">
@@ -392,9 +388,9 @@ if st.session_state.modo_impressao:
     </div>
     """
 
+    # Correção aplicada aqui: adicionado unsafe_allow_html=True
     st.markdown(html_ficha, unsafe_allow_html=True)
 
-    # Dispara a janela de impressão nativa diretamente focada neste documento limpo
     st.markdown(
         """
         <script>
@@ -405,7 +401,6 @@ if st.session_state.modo_impressao:
     )
 
 else:
-    # Layout normal do aplicativo com as duas colunas
     col_esq, col_dir = st.columns([1, 1.3], gap="large")
 
     with col_esq:
@@ -488,7 +483,6 @@ else:
                 st.rerun()
 
     with col_dir:
-        # Botão dedicado que abre a página limpa isolada para impressão em PDF sem capturar a tela inteira
         if st.button(
             "🖨️ Générer la Fiche Propre pour Impression / PDF",
             type="primary",
