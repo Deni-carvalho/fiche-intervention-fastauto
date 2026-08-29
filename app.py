@@ -342,12 +342,10 @@ with col_dir:
 
     dados_tabela = []
     for i, item_text in enumerate(st.session_state.selecionados):
-        # A opção "Fait?" (selectbox) foi removida conforme solicitado
-        rem_str = st.text_input("Remarque", value="", key=f"rem_{i}", label_visibility="collapsed")
-
         dados_tabela.append({
             "Activités (Ce qu'il y a à faire)": item_text,
-            "Remarques / Observations": rem_str
+            "Fait ? ([  ] / [ X ])": "",
+            "Remarques / Observations": ""
         })
 
     if dados_tabela:
