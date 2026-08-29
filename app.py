@@ -346,4 +346,4 @@ with col_dir:
     </div>
     """, unsafe_allow_html=True)
 
-    st.info("💡 **Prêt pour impression :** Appuyez sur **Ctrl + P** pour imprimer ou enregistrer le PDF.")app
+    st.info("💡 **Prêt pour impression :** Appuyez sur **Ctrl + P** pour imprimer ou enregistrer le PDF.")
