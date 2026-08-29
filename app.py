@@ -4,6 +4,7 @@ from datetime import datetime
 
 st.set_page_config(page_title="Fast Auto 91 - Fiche d'Intervention", page_icon="🔧", layout="wide")
 
+# CSS para ocultar a interface padrão apenas na hora de imprimir
 st.markdown("""
 <style>
     .main-header {
@@ -19,28 +20,21 @@ st.markdown("""
         margin-bottom: 10px;
     }
     
-    /* --- CONFIGURAÇÃO DE IMPRESSÃO LIMPA (APENAS A FICHA) --- */
     @media print {
-        /* Oculta absolutamente tudo na página por padrão */
-        body * {
-            visibility: hidden !important;
+        /* Esconde elementos de navegação e colunas laterais do Streamlit */
+        header, footer, [data-testid="stSidebar"], .no-print {
+            display: none !important;
         }
-        
-        /* Torna visível apenas a ficha de impressão e seus elementos internos */
-        .printable-sheet, .printable-sheet * {
-            visibility: visible !important;
-        }
-        
-        /* Posiciona a ficha no topo da página de impressão ocupando toda a largura */
+        /* Expande a área da ficha para ocupar a folha inteira */
         .printable-sheet {
             position: absolute !important;
             left: 0 !important;
             top: 0 !important;
             width: 100% !important;
             margin: 0 !important;
-            padding: 10px !important;
+            padding: 0 !important;
             border: none !important;
-            background: white !important;
+            box-shadow: none !important;
         }
     }
 </style>
@@ -211,7 +205,6 @@ catalogue_services = [
     "1640 - VHLGNV : Circuit refroidissement: Mesure du PH liquide refroidissement"
 ]
 
-# Inicialização e lógica de Reset Total
 if "selecionados" not in st.session_state:
     st.session_state.selecionados = []
 
@@ -231,7 +224,6 @@ with col_esq:
     st.markdown('<div class="no-print">', unsafe_allow_html=True)
     st.markdown("### 🔧 Fast Auto 91 — Sélection des Contrôles")
     
-    # Botão de Reiniciar / Reset Total
     if st.button("🔄 Réinitialiser la Fiche (Tout Effacer)", type="primary"):
         st.session_state.selecionados = []
         st.session_state.form_ot = ""
@@ -277,7 +269,7 @@ with col_esq:
             col_txt.markdown(f"<small>{item}</small>", unsafe_allow_html=True)
 
     st.markdown("---")
-    st.markdown("### 🗑️ Retirer de la fiche (Retour à gauche)")
+    st.markdown("### 🗑️ Retirer de la fiche")
     if not st.session_state.selecionados:
         st.write("Aucun contrôle sélectionné.")
     
@@ -291,15 +283,16 @@ with col_esq:
     st.markdown('</div>', unsafe_allow_html=True)
 
 with col_dir:
-    # Botão de impressão nativo em HTML que funciona perfeitamente
+    # Botão de impressão com seletor seguro via JS nativo do Streamlit/Browser
     st.markdown('<div class="no-print">', unsafe_allow_html=True)
     st.markdown("""
-        <button onclick="window.print();" style="width: 100%; background-color: #d32f2f; color: white; padding: 10px; border: none; border-radius: 5px; font-weight: bold; font-size: 15px; cursor: pointer; margin-bottom: 15px;">
+        <button onclick="window.print();" style="width: 100%; background-color: #d32f2f; color: white; padding: 12px; border: none; border-radius: 5px; font-weight: bold; font-size: 15px; cursor: pointer; margin-bottom: 15px;">
             🖨️ Imprimer la Fiche d'Intervention
         </button>
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
+    # Início da Ficha com a classe .printable-sheet
     st.markdown("<div class='printable-sheet' style='border: 1px solid #ccc; padding: 20px; background: white; border-radius: 5px;'>", unsafe_allow_html=True)
     
     col_logo, col_info = st.columns([1, 3.5])
@@ -342,7 +335,7 @@ with col_dir:
     for i, item_text in enumerate(st.session_state.selecionados):
         dados_tabela.append({
             "Activités (Ce qu'il y a à faire)": item_text,
-            "Fait ? ([ X ])": "",
+            "Fait ? ([  ] / [ X ])": "",
             "Remarques / Observations": ""
         })
 
@@ -366,5 +359,3 @@ with col_dir:
     </table>
     </div>
     """, unsafe_allow_html=True)
-
-    st.info("💡 **Prêt pour impression :** Appuyez sur le bouton **Imprimer la Fiche d'Intervention** acima ou use **Ctrl + P**.")
