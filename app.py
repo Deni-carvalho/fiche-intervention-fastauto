@@ -24,28 +24,24 @@ st.markdown(
     }
     
     @media print {
-        /* Oculta tudo na página, exceto o container da ficha */
-        header, footer, [data-testid="stSidebar"], .no-print, [data-testid="column"]:nth-of-type(1) {
-            display: none !important;
+        /* Oculta tudo na página por padrão */
+        body * {
+            visibility: hidden !important;
         }
         
-        /* Expande a coluna da direita para ocupar toda a folha */
-        [data-testid="column"]:nth-of-type(2) {
-            width: 100% !important;
-            flex: 1 1 100% !important;
-            max-width: 100% !important;
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
+        /* Torna visível apenas o container da ficha e seus elementos internos */
+        .ficha-container, .ficha-container * {
+            visibility: visible !important;
         }
-
+        
+        /* Posiciona e expande a ficha perfeitamente na folha de impressão */
         .ficha-container {
             position: absolute !important;
             left: 0 !important;
             top: 0 !important;
             width: 100% !important;
             margin: 0 !important;
-            padding: 5px !important;
+            padding: 0 !important;
             border: none !important;
             box-shadow: none !important;
             background: white !important;
@@ -348,7 +344,6 @@ if "form_ot" not in st.session_state:
 col_esq, col_dir = st.columns([1, 1.3], gap="large")
 
 with col_esq:
-    st.markdown('<div class="no-print">', unsafe_allow_html=True)
     st.markdown("### 🔧 Fast Auto 91 — Sélection des Contrôles")
 
     if st.button("🔄 Réinitialiser la Fiche (Tout Effacer)", type="primary"):
@@ -428,10 +423,7 @@ with col_esq:
             st.session_state.selecionados.pop(idx)
             st.rerun()
 
-    st.markdown("</div>", unsafe_allow_html=True)
-
 with col_dir:
-    st.markdown('<div class="no-print">', unsafe_allow_html=True)
     components.html(
         """
         <button onclick="window.parent.print();" style="width: 100%; background-color: #d32f2f; color: white; padding: 12px; border: none; border-radius: 5px; font-weight: bold; font-size: 15px; cursor: pointer; font-family: sans-serif; box-sizing: border-box;">
@@ -440,7 +432,6 @@ with col_dir:
     """,
         height=50,
     )
-    st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown(
         "<div class='ficha-container' style='border: 1px solid #ccc; padding:"
