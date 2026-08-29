@@ -342,15 +342,11 @@ with col_dir:
 
     dados_tabela = []
     for i, item_text in enumerate(st.session_state.selecionados):
-        col_f1, col_f2 = st.columns([1, 2])
-        # Campo "Fait?" com espaço em branco como primeira opção padrão
-        status_str = st.selectbox("Fait?", ["", "[ X ]", "[ &nbsp; ]"], key=f"st_{i}", label_visibility="collapsed")
-        # Campo "Remarques / Observations" totalmente em branco por padrão
+        # A opção "Fait?" (selectbox) foi removida conforme solicitado
         rem_str = st.text_input("Remarque", value="", key=f"rem_{i}", label_visibility="collapsed")
 
         dados_tabela.append({
             "Activités (Ce qu'il y a à faire)": item_text,
-            "Fait ?": status_str,
             "Remarques / Observations": rem_str
         })
 
