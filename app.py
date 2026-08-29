@@ -1,6 +1,7 @@
 from datetime import datetime
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 
 st.set_page_config(
     page_title="Fast Auto 91 - Fiche d'Intervention", page_icon="🔧", layout="wide"
@@ -388,7 +389,7 @@ if st.session_state.modo_impressao:
     </div>
     """
 
-    st.markdown(html_ficha, unsafe_allow_html=True)
+    components.html(html_ficha, height=900, scrolling=True)
 
     st.markdown(
         """
