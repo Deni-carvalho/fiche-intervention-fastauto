@@ -335,7 +335,7 @@ with col_dir:
     for i, item_text in enumerate(st.session_state.selecionados):
         dados_tabela.append({
             "Activités (Ce qu'il y a à faire)": item_text,
-            "Fait ? ([  ] / [ X ])": "",
+            "Fait ? ([ X ])": "",
             "Remarques / Observations": ""
         })
 
