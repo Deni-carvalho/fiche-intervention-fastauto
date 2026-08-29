@@ -1,11 +1,14 @@
-import streamlit as st
-import pandas as pd
 from datetime import datetime
+import pandas as pd
+import streamlit as st
+import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Fast Auto 91 - Fiche d'Intervention", page_icon="🔧", layout="wide")
+st.set_page_config(
+    page_title="Fast Auto 91 - Fiche d'Intervention", page_icon="🔧", layout="wide"
+)
 
-# CSS para ocultar a interface padrão apenas na hora de imprimir
-st.markdown("""
+st.markdown(
+    """
 <style>
     .main-header {
         font-size: 18px;
@@ -21,11 +24,16 @@ st.markdown("""
     }
     
     @media print {
-        /* Esconde elementos de navegação e colunas laterais do Streamlit */
-        header, footer, [data-testid="stSidebar"], .no-print {
+        /* Esconde elementos de navegação, barra lateral, botões e a primeira coluna (inputs) */
+        header, footer, [data-testid="stSidebar"], .no-print, [data-testid="column"]:nth-of-type(1) {
             display: none !important;
         }
-        /* Expande a área da ficha para ocupar a folha inteira */
+        /* Expande a segunda coluna (onde está a ficha) para ocupar 100% da página */
+        [data-testid="column"]:nth-of-type(2) {
+            width: 100% !important;
+            flex: 1 1 100% !important;
+            max-width: 100% !important;
+        }
         .printable-sheet {
             position: absolute !important;
             left: 0 !important;
@@ -38,37 +46,78 @@ st.markdown("""
         }
     }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 catalogue_services = [
     "10 - Documents véhicule : Contrôle présence documents, Validité EAD/TACHY/LIM...",
     "20 - Général : Lavage du véhicule",
     "30 - Général : Lavage moteur et ventilateur / radiateurs complet",
     "40 - Ext Vhl / Électricité : Contrôle éclairage extérieure, catadioptres",
-    "50 - Ext Vhl / Électricité : Contrôle circuit de charge, niveau, fixation et cosse BAT",
-    "60 - Ext Vhl / Électricité : Contrôle de la présence de la protection des batteries",
+    (
+        "50 - Ext Vhl / Électricité : Contrôle circuit de charge, niveau,"
+        " fixation et cosse BAT"
+    ),
+    (
+        "60 - Ext Vhl / Électricité : Contrôle de la présence de la protection des"
+        " batteries"
+    ),
     "70 - Ext Vhl / Électricité : Contrôle Fonctionnement coupe batteries",
     "80 - Ext Vhl / Électricité : Contrôle et graissage glissière porte batteries",
     "90 - Ext Vhl / Porte : Contrôle des Fonctionnement des portes",
     "100 - Ext Vhl / Porte : Contrôle du Dégivrage des glaces de portes AV",
     "110 - Ext Vhl / Porte : Contrôle des Issues de secours des portes AV / AR",
-    "120 - Ext Vhl / Porte : Contrôle présence picto issue de secours AV/ AR / Pavillon",
-    "130 - Ext Vhl / Porte : Contrôle anti-pincement / Bord sensible / réversion portes",
+    (
+        "120 - Ext Vhl / Porte : Contrôle présence picto issue de secours AV/ AR"
+        " / Pavillon"
+    ),
+    (
+        "130 - Ext Vhl / Porte : Contrôle anti-pincement / Bord sensible /"
+        " réversion portes"
+    ),
     "140 - Ext Vhl / Porte : Contrôle des Sécurités de présence sur les marches",
     "150 - Ext Vhl / Porte : Contrôle éclairage des marches AV / Milieu / AR",
     "160 - Ext Vhl / Porte : Contrôle des Mains courantes et poignées",
-    "170 - Ext Vhl / Porte : Contrôle des état revêtement sol des marches AV / Milieu / AR",
+    (
+        "170 - Ext Vhl / Porte : Contrôle des état revêtement sol des marches"
+        " AV / Milieu / AR"
+    ),
     "180 - Ext Vhl / Porte : Contrôle système de verrouillage AV / Milieu / AR",
     "190 - Ext Vhl / Rampe PMR : Contrôle de l'état des trappes de rampe",
     "210 - Ext Vhl / Rampe PMR : Contrôle du Fonctionnement de la rampe d'accès",
-    "220 - Ext Vhl / Rampe PMR : Contrôle du Fonctionnement du dispositif d'urgence",
-    "230 - Ext Vhl / Rampe PMR : Contrôle du Fonctionnement des bords sensibles",
-    "240 - Ext Vhl / Carrosserie : Contrôle général carrosserie. Bandes réfléchissantes",
-    "250 - Ext Vhl / Carrosserie : Contrôle de la Plaque d'immat et présence raison sociale",
-    "260 - Ext Vhl / Carrosserie : Contrôle présence disques LIM vitesse / picto Angle mort",
-    "270 - Ext Vhl / Carrosserie : Contrôle des vérins de soute / trappe de maintenance",
-    "290 - Ext Vhl / Pneumatiques : Contrôle état général pneus, Enjoliveur et pression",
-    "300 - Ext Vhl / Pneumatiques : Contrôle présence Témoins et Resserrer si besoin",
+    (
+        "220 - Ext Vhl / Rampe PMR : Contrôle du Fonctionnement du dispositif"
+        " d'urgence"
+    ),
+    (
+        "230 - Ext Vhl / Rampe PMR : Contrôle du Fonctionnement des bords"
+        " sensibles"
+    ),
+    (
+        "240 - Ext Vhl / Carrosserie : Contrôle général carrosserie. Bandes"
+        " réfléchissantes"
+    ),
+    (
+        "250 - Ext Vhl / Carrosserie : Contrôle de la Plaque d'immat et présence"
+        " raison sociale"
+    ),
+    (
+        "260 - Ext Vhl / Carrosserie : Contrôle présence disques LIM vitesse /"
+        " picto Angle mort"
+    ),
+    (
+        "270 - Ext Vhl / Carrosserie : Contrôle des vérins de soute / trappe de"
+        " maintenance"
+    ),
+    (
+        "290 - Ext Vhl / Pneumatiques : Contrôle état général pneus, Enjoliveur"
+        " et pression"
+    ),
+    (
+        "300 - Ext Vhl / Pneumatiques : Contrôle présence Témoins et Resserrer"
+        " si besoin"
+    ),
     "310 - Poste CONDUC : Passage à la valise, lecture et effacement des défauts",
     "320 - Poste CONDUC : Contrôle état et Fonctionnement du siège conducteur",
     "330 - Poste CONDUC : Contrôle état et Fonctionnement des Pare-soleils",
@@ -77,9 +126,18 @@ catalogue_services = [
     "360 - Poste CONDUC : Contrôle des Patins des pédales",
     "370 - Poste CONDUC : Contrôle du Fonctionnement dégivrage fenêtre conducteur",
     "380 - Poste CONDUC : Commande ralentisseur, Avertisseur sonore",
-    "390 - Poste CONDUC : Contrôle Fonctionnement caméra et radar de recul, alarme sonore",
-    "400 - Poste CONDUC : Contrôle et Fonctionnement des commodos et état essuie-glaces",
-    "410 - Poste CONDUC : Contrôle Fonctionnement éclairage et voyants Tableau de bord",
+    (
+        "390 - Poste CONDUC : Contrôle Fonctionnement caméra et radar de recul,"
+        " alarme sonore"
+    ),
+    (
+        "400 - Poste CONDUC : Contrôle et Fonctionnement des commodos et état"
+        " essuie-glaces"
+    ),
+    (
+        "410 - Poste CONDUC : Contrôle Fonctionnement éclairage et voyants Tableau"
+        " de bord"
+    ),
     "420 - Poste CONDUC : Contrôle date de validité Extincteur",
     "430 - Poste CONDUC : Contrôle de la présence pictogramme extincteur",
     "440 - Poste CONDUC : Contrôle validité, contenance et picto boite pharmacie",
@@ -87,8 +145,14 @@ catalogue_services = [
     "460 - Poste CONDUC : Contrôle du FAE",
     "470 - Poste CONDUC : Contrôle freins de Parc",
     "480 - Poste CONDUC : Nettoyage filtre anti-pollen conducteur et passagers",
-    "490 - Poste CONDUC : Chauffage : Contrôle du fonctionnement du CHAUFF CONDUC et passager",
-    "500 - Poste CONDUC : Climatisation : Contrôle Fonctionnement Clim CONDUC + ventil PB",
+    (
+        "490 - Poste CONDUC : Chauffage : Contrôle du fonctionnement du CHAUFF"
+        " CONDUC et passager"
+    ),
+    (
+        "500 - Poste CONDUC : Climatisation : Contrôle Fonctionnement Clim CONDUC"
+        " + ventil PB"
+    ),
     "510 - Poste CONDUC : Climatisation : Contrôle du fonctionnement Clim passager",
     "520 - Int Vhl / Carrosserie : Contrôle présence de la plaque de tare",
     "530 - Int Vhl : Contrôle ouverture fenêtres basculantes (si équipé)",
@@ -98,25 +162,58 @@ catalogue_services = [
     "570 - Int Vhl / Électricité : Contrôle et état des éclairages intérieurs",
     "580 - Int Vhl / Bouteilles d'air : Contrôle validité / Purge / Signer le registre",
     "590 - Int Vhl : Contrôle et état Fixation des sièges et ceintures de sécurité",
-    "600 - Int Vhl / Articulation : Contrôle de la plateforme articulation (Joints, bâche)",
-    "610 - Moteur / Électricité : Contrôle état et fixation alternateur et câblage",
-    "620 - Moteur / Électricité : Contrôle état et fixation des passages des câblages élec",
-    "630 - Moteur / Électricité : Contrôle câblages, connectiques et protection démarreur",
-    "640 - Moteur : Contrôle Fonctionnement contacteur de sécurité démarrage (capot moteur)",
+    (
+        "600 - Int Vhl / Articulation : Contrôle de la plateforme articulation"
+        " (Joints, bâche)"
+    ),
+    (
+        "610 - Moteur / Électricité : Contrôle état et fixation alternateur et"
+        " câblage"
+    ),
+    (
+        "620 - Moteur / Électricité : Contrôle état et fixation des passages des"
+        " câblages élec"
+    ),
+    (
+        "630 - Moteur / Électricité : Contrôle câblages, connectiques et"
+        " protection démarreur"
+    ),
+    (
+        "640 - Moteur : Contrôle Fonctionnement contacteur de sécurité"
+        " démarrage (capot moteur)"
+    ),
     "650 - Moteur : Contrôle des niveaux des fluides",
     "660 - Moteur : Contrôle état et Fixation silentbloc moteur",
     "670 - Moteur : Contrôle état et fixation faisceaux électriques moteur",
     "680 - Moteur : Contrôle des courroie, tendeurs et poulies",
     "690 - Moteur : Contrôle étanchéité moteur",
-    "700 - Moteur : Contrôle et/ou graissage turbo - Contrôle vis fixation protect chaleur",
-    "710 - Moteur : Contrôle détection incendie (Etat flexible/buses/pression bouteille)",
-    "720 - Moteur / Admission d'air : Contrôle état et fixations circuit d'admission d'air",
+    (
+        "700 - Moteur : Contrôle et/ou graissage turbo - Contrôle vis fixation"
+        " protect chaleur"
+    ),
+    (
+        "710 - Moteur : Contrôle détection incendie (Etat"
+        " flexible/buses/pression bouteille)"
+    ),
+    (
+        "720 - Moteur / Admission d'air : Contrôle état et fixations circuit"
+        " d'admission d'air"
+    ),
     "730 - Moteur / Admission d'air : Contrôle radiateur / intercooler",
-    "740 - Moteur / Échappement : Contrôle des fixations et étanchéité système de gaz échap",
-    "750 - Moteur / Circuit Refroid : Etanchéité, vase d'expansion, Niv LR, bouchon, clapet",
+    (
+        "740 - Moteur / Échappement : Contrôle des fixations et étanchéité système"
+        " de gaz échap"
+    ),
+    (
+        "750 - Moteur / Circuit Refroid : Etanchéité, vase d'expansion, Niv LR,"
+        " bouchon, clapet"
+    ),
     "760 - Moteur / Circuit Refroid : Contrôle radiateur et ventilation moteur",
     "770 - Moteur / Circuit Refroid : Etanchéité, Niv réservoir hydro",
-    "780 - Moteur / Circuit Refroid : Réglage tension courroie pompe eau, ventilo hydrostat",
+    (
+        "780 - Moteur / Circuit Refroid : Réglage tension courroie pompe eau,"
+        " ventilo hydrostat"
+    ),
     "790 - Moteur / Compresseur dair : Etat général / Contrôle fixation",
     "800 - Moteur / Déshuileur : Etat général / Contrôle fixation",
     "810 - Moteur / Dessiccateur : Etat état et fixation faisceau",
@@ -131,18 +228,27 @@ catalogue_services = [
     "900 - Sous Vhl / Direction : Contrôle Renvoi d'angle, rotule, barre Accoupl, liaisons",
     "910 - Sous Vhl / Direction : Contrôle de l'étanchéité des conduites de la DA",
     "920 - Sous Vhl / Direction : Contrôle étachéité et fixation boîtier de DA et support",
-    "930 - Sous Vhl / Frein AV : Contrôle Disques de freins AV, mesure épaisseur D: ...; G: ...",
+    (
+        "930 - Sous Vhl / Frein AV : Contrôle Disques de freins AV, mesure"
+        " épaisseur D: ...; G: ..."
+    ),
     "940 - Sous Vhl / Frein AV : Contrôle plaquettes AV",
     "950 - Sous Vhl / Freins AV : Contrôle étriers, flexibles et cylindres des freins AV",
     "960 - Sous Vhl / Freins AV : Contrôle câblages ABS AV + capteur usure plaquette",
     "970 - Sous Vhl / Freins AV:Ctrl, réglage et graissage des Cames freins AV",
-    "980 - Sous Vhl / Frein Milieu : Contrôle Disques, mesure épaisseur D: ......; G: .....",
+    (
+        "980 - Sous Vhl / Frein Milieu : Contrôle Disques, mesure épaisseur D:"
+        " ......; G: ....."
+    ),
     "990 - Sous Vhl / Frein Milieu : Contrôle plaquettes Milieu",
     "1000 - Sous Vhl / Freins Milieu : Contrôle étriers, flexibles et cylindres freins Milieu",
     "1010 - Sous Vhl / Freins Milieu : Contrôle câblages ABS et capteur usure plaquettes",
     "1020 - Sous Vhl / Freins Milieu : Ctrl, réglage et graissage des Cames freins Milieu",
     "1030 - Sous Vhl / Freins Milieu : Contrôle du modulateurs d'essieu de freinage Milieu",
-    "1040 - Sous Vhl / Freins ARR : Contrôle Disques, mesure épaisseur D: ......; G: .....",
+    (
+        "1040 - Sous Vhl / Freins ARR : Contrôle Disques, mesure épaisseur D:"
+        " ......; G: ....."
+    ),
     "1050 - Sous Vhl / Freins ARR : Contrôle plaquette freins ARR",
     "1060 - Sous Vhl / Freins ARR : Contrôle étriers, flexibles et cylindres freins ARR",
     "1070 - Sous Vhl / Freins Milieu: Contrôle câblages ABS et capteur usure plaquette",
@@ -172,9 +278,18 @@ catalogue_services = [
     "1310 - Pont / transmission : Contrôle et nettoyage mise à l'air libre",
     "1320 - Pont / transmission : Contrôle fixations et jeux arbre de transmission",
     "1330 - VHL HYBRIDE : Contrôle du niveau d'huile du moteur électrique de traction",
-    "1340 - VHL HYBRIDE : Contrôle Etat des tuyaux refroidissement de la chaîne de traction",
-    "1350 - VHL HYBRIDE : Contrôle Etat des connecteurs, des câbles du circuit électrique",
-    "1360 - VHL HYBRIDE : Contrôle / nettoyage radiateurs de refroidis (chaîne de traction)",
+    (
+        "1340 - VHL HYBRIDE : Contrôle Etat des tuyaux refroidissement de la chaîne"
+        " de traction"
+    ),
+    (
+        "1350 - VHL HYBRIDE : Contrôle Etat des connecteurs, des câbles du circuit"
+        " électrique"
+    ),
+    (
+        "1360 - VHL HYBRIDE : Contrôle / nettoyage radiateurs de refroidis (chaîne"
+        " de traction)"
+    ),
     "1370 - VHL HYBRIDE : Contrôle de l'efficacité du reniflard, Nettoyage",
     "1380 - VHL HYBRIDE : Faire l'appoint d'huile du réducteur cumulatif",
     "1390 - VHL HYBRIDE : Contrôle de l'étanchéité du réducteur d'adaptation",
@@ -188,7 +303,10 @@ catalogue_services = [
     "1470 - VHL GNV : Contrôle vis de fixation protection chaleur turbocompresseur",
     "1480 - VHL GNV : Contrôle de l'étanchéité du circuit du ventilateur hydrostatique",
     "1490 - VHL GNV : Etanchéité conduites liquide chauff (régulateur pression gaz)",
-    "1500 - VHL GNV : Contrôle visuel du bon état du câblage du circuit électrique moteur",
+    (
+        "1500 - VHL GNV : Contrôle visuel du bon état du câblage du circuit"
+        " électrique moteur"
+    ),
     "1510 - VHL GNV : Diagnostic du système CNG moteur par outil de diagnostic",
     "1520 - VHL GNV : Contrôle état tuyaux flexibles cylindres commande freins",
     "1530 - VHL GNV : Contrôle intégrité des bagues des barres stabilisatrices",
@@ -196,13 +314,16 @@ catalogue_services = [
     "1550 - VHL GNV : Contrôle de l'étanchéité du circuit pneumatique",
     "1560 - VHL GNV : Contrôle étanchéité hydraulique amortisseurs",
     "1570 - VHL GNV : Contrôle l'amortisseur et les fixations du stabilisateur",
-    "1580 - VHL GNV : Contrôle fixation flasques/supports arbre de transmission contrôle jeu",
+    (
+        "1580 - VHL GNV : Contrôle fixation flasques/supports arbre de"
+        " transmission contrôle jeu"
+    ),
     "1590 - VHL GNV : Contrôle de l'étanchéité du Circuit Refroid du moteur",
     "1600 - VHL GNV : Contrôle de l'étanchéité des fluides des groupes mécaniques",
     "1610 - VHL GNV : Contrôle de l'efficacité du reniflard de la BV mécanique",
     "1620 - VHL GNV : Contrôle du système de surpression CNG",
     "1630 - VHL GNV : Vérification du fonctionnement des capteurs de détection CNG",
-    "1640 - VHLGNV : Circuit refroidissement: Mesure du PH liquide refroidissement"
+    "1640 - VHLGNV : Circuit refroidissement: Mesure du PH liquide refroidissement",
 ]
 
 if "selecionados" not in st.session_state:
@@ -223,7 +344,7 @@ col_esq, col_dir = st.columns([1, 1.3], gap="large")
 with col_esq:
     st.markdown('<div class="no-print">', unsafe_allow_html=True)
     st.markdown("### 🔧 Fast Auto 91 — Sélection des Contrôles")
-    
+
     if st.button("🔄 Réinitialiser la Fiche (Tout Effacer)", type="primary"):
         st.session_state.selecionados = []
         st.session_state.form_ot = ""
@@ -234,33 +355,54 @@ with col_esq:
         st.rerun()
 
     with st.expander("📝 Informations Générales du Véhicule", expanded=True):
-        st.session_state.form_ot = st.text_input("N° d'OT / Intervention", st.session_state.form_ot)
-        st.session_state.form_client = st.text_input("Client / Réseau", st.session_state.form_client)
-        st.session_state.form_type = st.text_input("Type d'Intervention", st.session_state.form_type)
-        st.session_state.form_date = st.text_input("Date d'intervention", st.session_state.form_date)
-        
+        st.session_state.form_ot = st.text_input(
+            "N° d'OT / Intervention", st.session_state.form_ot
+        )
+        st.session_state.form_client = st.text_input(
+            "Client / Réseau", st.session_state.form_client
+        )
+        st.session_state.form_type = st.text_input(
+            "Type d'Intervention", st.session_state.form_type
+        )
+        st.session_state.form_date = st.text_input(
+            "Date d'intervention", st.session_state.form_date
+        )
+
         c1, c2 = st.columns(2)
         with c1:
-            st.session_state.form_chassis = st.text_input("Châssis (N° de parc)", st.session_state.form_chassis)
-            st.session_state.form_immat = st.text_input("Immatriculation / VIN", st.session_state.form_immat)
+            st.session_state.form_chassis = st.text_input(
+                "Châssis (N° de parc)", st.session_state.form_chassis
+            )
+            st.session_state.form_immat = st.text_input(
+                "Immatriculation / VIN", st.session_state.form_immat
+            )
         with c2:
-            st.session_state.form_km = st.text_input("Kilométrage", st.session_state.form_km)
-            st.session_state.form_pere = st.text_input("Équipement père", st.session_state.form_pere)
+            st.session_state.form_km = st.text_input(
+                "Kilométrage", st.session_state.form_km
+            )
+            st.session_state.form_pere = st.text_input(
+                "Équipement père", st.session_state.form_pere
+            )
 
     st.markdown("---")
     st.markdown("### ➕ Ajouter un service à la fiche")
-    
+
     filtro_busca = st.text_input("🔍 Rechercher un contrôle dans le catalogue...", "")
-    
+
     itens_filtrados = [
-        item for item in catalogue_services 
-        if filtro_busca.lower() in item.lower() and item not in st.session_state.selecionados
+        item
+        for item in catalogue_services
+        if filtro_busca.lower() in item.lower()
+        and item not in st.session_state.selecionados
     ]
 
     container_scroll = st.container(height=300)
     with container_scroll:
         if not itens_filtrados:
-            st.info("Tous les services filtrés ont déjà été ajoutés ou aucun résultat trouvé.")
+            st.info(
+                "Tous les services filtrés ont déjà été ajoutés ou aucun résultat"
+                " trouvé."
+            )
         for item in itens_filtrados:
             col_btn, col_txt = st.columns([1, 8])
             if col_btn.button("➕", key=f"add_{item}"):
@@ -272,7 +414,7 @@ with col_esq:
     st.markdown("### 🗑️ Retirer de la fiche")
     if not st.session_state.selecionados:
         st.write("Aucun contrôle sélectionné.")
-    
+
     for idx, item_sel in enumerate(st.session_state.selecionados):
         col_item, col_rem = st.columns([4, 1])
         col_item.text(f"• {item_sel[:30]}...")
@@ -280,21 +422,29 @@ with col_esq:
             st.session_state.selecionados.pop(idx)
             st.rerun()
 
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 with col_dir:
-    # Botão de impressão com seletor seguro via JS nativo do Streamlit/Browser
     st.markdown('<div class="no-print">', unsafe_allow_html=True)
-    st.markdown("""
-        <button onclick="window.print();" style="width: 100%; background-color: #d32f2f; color: white; padding: 12px; border: none; border-radius: 5px; font-weight: bold; font-size: 15px; cursor: pointer; margin-bottom: 15px;">
+
+    # Botão seguro via components.html para disparar a impressão corretamente
+    components.html(
+        """
+        <button onclick="window.parent.print();" style="width: 100%; background-color: #d32f2f; color: white; padding: 12px; border: none; border-radius: 5px; font-weight: bold; font-size: 15px; cursor: pointer; font-family: sans-serif; box-sizing: border-box;">
             🖨️ Imprimer la Fiche d'Intervention
         </button>
-    """, unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    """,
+        height=50,
+    )
 
-    # Início da Ficha com a classe .printable-sheet
-    st.markdown("<div class='printable-sheet' style='border: 1px solid #ccc; padding: 20px; background: white; border-radius: 5px;'>", unsafe_allow_html=True)
-    
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown(
+        "<div class='printable-sheet' style='border: 1px solid #ccc; padding:"
+        " 20px; background: white; border-radius: 5px;'>",
+        unsafe_allow_html=True,
+    )
+
     col_logo, col_info = st.columns([1, 3.5])
     with col_logo:
         try:
@@ -303,10 +453,18 @@ with col_dir:
             st.write("🔧 **FAST AUTO**")
 
     with col_info:
-        st.markdown("<p class='main-header'>FAST AUTO 91 — RAPPORT D'INTERVENTION</p>", unsafe_allow_html=True)
-        st.markdown("<p class='sub-header'>MÉCANIQUE V.L - P.L | Intervention sur site<br/>6 rue Gustave Madiot, 91070 Bondoufle</p>", unsafe_allow_html=True)
+        st.markdown(
+            "<p class='main-header'>FAST AUTO 91 — RAPPORT D'INTERVENTION</p>",
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            "<p class='sub-header'>MÉCANIQUE V.L - P.L | Intervention sur"
+            " site<br/>6 rue Gustave Madiot, 91070 Bondoufle</p>",
+            unsafe_allow_html=True,
+        )
 
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <hr style='margin: 5px 0 10px 0;'>
     <table style='width: 100%; font-size: 10pt;'>
         <tr>
@@ -327,7 +485,9 @@ with col_dir:
         </tr>
     </table>
     <hr style='margin: 10px 0;'>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     st.markdown("#### Contrôles et Observations (Sélectionnés)")
 
@@ -336,16 +496,20 @@ with col_dir:
         dados_tabela.append({
             "Activités (Ce qu'il y a à faire)": item_text,
             "Fait ? ([ X ])": "",
-            "Remarques / Observations": ""
+            "Remarques / Observations": "",
         })
 
     if dados_tabela:
         df_exibicao = pd.DataFrame(dados_tabela)
         st.table(df_exibicao)
     else:
-        st.warning("Aucun contrôle ajouté pour le moment. Veuillez en sélectionner dans la colonne de gauche.")
+        st.warning(
+            "Aucun contrôle ajouté pour le moment. Veuillez en sélectionner dans"
+            " la colonne de gauche."
+        )
 
-    st.markdown("""
+    st.markdown(
+        """
     <table style='width: 100%; margin-top: 25px; border-collapse: collapse;'>
         <tr>
             <td style='border: 1px solid #bbb; padding: 10px; width: 48%; height: 50px; vertical-align: top;'>
@@ -358,4 +522,6 @@ with col_dir:
         </tr>
     </table>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
