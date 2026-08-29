@@ -388,7 +388,6 @@ if st.session_state.modo_impressao:
     </div>
     """
 
-    # Correção aplicada aqui: adicionado unsafe_allow_html=True
     st.markdown(html_ficha, unsafe_allow_html=True)
 
     st.markdown(
