@@ -1,5 +1,7 @@
 from datetime import datetime
+import base64
 import io
+import os
 from xhtml2pdf import pisa
 import pandas as pd
 import streamlit as st
@@ -293,6 +295,16 @@ if "form_ot" not in st.session_state:
 
 
 def gerar_pdf_bytes():
+    img_tag = ""
+    if os.path.exists("logo.png"):
+        with open("logo.png", "rb") as img_file:
+            encoded = base64.b64encode(img_file.read()).decode("utf-8")
+            img_tag = f'<img src="data:image/png;base64,{encoded}" width="90"/>'
+    elif os.path.exists("LOGO.png"):
+        with open("LOGO.png", "rb") as img_file:
+            encoded = base64.b64encode(img_file.read()).decode("utf-8")
+            img_tag = f'<img src="data:image/png;base64,{encoded}" width="90"/>'
+
     linhas_tabela = ""
     if st.session_state.selecionados:
         for item in st.session_state.selecionados:
@@ -330,7 +342,7 @@ def gerar_pdf_bytes():
         <table style="width: 100%; margin-bottom: 10px; border-collapse: collapse;">
             <tr>
                 <td style="width: 20%; vertical-align: middle;">
-                    <img src="logo.png" width="90"/>
+                    {img_tag}
                 </td>
                 <td style="width: 80%; vertical-align: middle;">
                     <div style="font-size: 15px; font-weight: bold; color: #d32f2f;">FAST AUTO 91 &mdash; RAPPORT D'INTERVENTION</div>
@@ -504,7 +516,10 @@ with col_dir:
         try:
             st.image("LOGO.png", width=95)
         except:
-            st.write("🔧 **FAST AUTO**")
+            try:
+                st.image("logo.png", width=95)
+            except:
+                st.write("🔧 **FAST AUTO**")
 
     with col_info:
         st.markdown(
