@@ -24,28 +24,31 @@ st.markdown(
     }
     
     @media print {
-        /* Oculta tudo na página por padrão */
-        body * {
-            visibility: hidden !important;
+        /* Oculta tudo na página, exceto o container da ficha */
+        header, footer, [data-testid="stSidebar"], .no-print, [data-testid="column"]:nth-of-type(1) {
+            display: none !important;
         }
-        /* Exibe apenas o container específico da ficha de intervenção e seus filhos */
-        .ficha-container, .ficha-container * {
-            visibility: visible !important;
+        
+        /* Expande a coluna da direita para ocupar toda a folha */
+        [data-testid="column"]:nth-of-type(2) {
+            width: 100% !important;
+            flex: 1 1 100% !important;
+            max-width: 100% !important;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
         }
-        /* Posiciona a ficha no canto superior esquerdo da folha impressa */
+
         .ficha-container {
             position: absolute !important;
             left: 0 !important;
             top: 0 !important;
             width: 100% !important;
             margin: 0 !important;
-            padding: 10px !important;
+            padding: 5px !important;
             border: none !important;
             box-shadow: none !important;
             background: white !important;
-        }
-        header, footer, [data-testid="stSidebar"], .no-print {
-            display: none !important;
         }
     }
 </style>
@@ -439,7 +442,6 @@ with col_dir:
     )
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # Adicionada a classe 'ficha-container' aqui para isolar perfeitamente a impressão
     st.markdown(
         "<div class='ficha-container' style='border: 1px solid #ccc; padding:"
         " 20px; background: white; border-radius: 5px;'>",
