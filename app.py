@@ -304,9 +304,9 @@ def gerar_pdf_bytes():
         for item in st.session_state.selecionados:
             linhas_tabela += f"""
                 <tr>
-                    <td style="border: 1px solid #ddd; padding: 6px;">{item}</td>
-                    <td style="border: 1px solid #ddd; padding: 6px; text-align: center;"></td>
-                    <td style="border: 1px solid #ddd; padding: 6px;"></td>
+                    <td style="border: 1px solid #ddd; padding: 6px; width: 55%;">{item}</td>
+                    <td style="border: 1px solid #ddd; padding: 6px; text-align: center; width: 20%;"></td>
+                    <td style="border: 1px solid #ddd; padding: 6px; width: 25%;"></td>
                 </tr>
             """
     else:
@@ -319,6 +319,7 @@ def gerar_pdf_bytes():
     html_content = f"""
     <html>
     <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <style>
         @page {{
             size: A4;
@@ -333,7 +334,7 @@ def gerar_pdf_bytes():
     </head>
     <body>
         <div style="border-bottom: 2px solid #d32f2f; padding-bottom: 5px; margin-bottom: 10px;">
-            <div style="font-size: 16px; font-weight: bold; color: #d32f2f;">FAST AUTO 91 — RAPPORT D'INTERVENTION</div>
+            <div style="font-size: 16px; font-weight: bold; color: #d32f2f;">FAST AUTO 91 &mdash; RAPPORT D'INTERVENTION</div>
         </div>
         <div style="font-size: 9pt; color: #444; margin-bottom: 15px;">
             MÉCANIQUE V.L - P.L | Intervention sur site<br/>6 rue Gustave Madiot, 91070 Bondoufle
@@ -341,8 +342,8 @@ def gerar_pdf_bytes():
         
         <table style="width: 100%; font-size: 9pt; border-collapse: collapse; margin-bottom: 15px;">
             <tr>
-                <td style="padding: 3px 0;"><b>Client / Réseau :</b> {st.session_state.form_client}</td>
-                <td style="padding: 3px 0;"><b>N° d'OT :</b> <span style="color: #d32f2f;">{st.session_state.form_ot}</span></td>
+                <td style="padding: 3px 0; width: 50%;"><b>Client / Réseau :</b> {st.session_state.form_client}</td>
+                <td style="padding: 3px 0; width: 50%;"><b>N° d'OT :</b> <span style="color: #d32f2f;">{st.session_state.form_ot}</span></td>
             </tr>
             <tr>
                 <td style="padding: 3px 0;"><b>Type d'intervention :</b> {st.session_state.form_type}</td>
@@ -363,8 +364,8 @@ def gerar_pdf_bytes():
         <table style="width: 100%; border-collapse: collapse; font-size: 9pt; margin-top: 5px;">
             <thead>
                 <tr style="background-color: #f2f2f2;">
-                    <th style="border: 1px solid #ddd; padding: 6px; text-align: left; width: 60%;">Activités (Ce qu'il y a à faire)</th>
-                    <th style="border: 1px solid #ddd; padding: 6px; text-align: center; width: 15%;">Fait ? ([ X ])</th>
+                    <th style="border: 1px solid #ddd; padding: 6px; text-align: left; width: 55%;">Activités (Ce qu'il y a à faire)</th>
+                    <th style="border: 1px solid #ddd; padding: 6px; text-align: center; width: 20%;">Fait ? ([ X ])</th>
                     <th style="border: 1px solid #ddd; padding: 6px; text-align: left; width: 25%;">Remarques / Observations</th>
                 </tr>
             </thead>
