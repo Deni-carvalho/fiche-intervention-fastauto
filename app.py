@@ -1,55 +1,9 @@
 from datetime import datetime
 import pandas as pd
 import streamlit as st
-import streamlit.components.v1 as components
 
 st.set_page_config(
     page_title="Fast Auto 91 - Fiche d'Intervention", page_icon="🔧", layout="wide"
-)
-
-st.markdown(
-    """
-<style>
-    .main-header {
-        font-size: 18px;
-        font-weight: bold;
-        color: #d32f2f;
-        text-transform: uppercase;
-        margin-bottom: 0px;
-    }
-    .sub-header {
-        font-size: 12px;
-        color: #444;
-        margin-bottom: 10px;
-    }
-    
-    @media print {
-        /* Oculta tudo na página por padrão */
-        body * {
-            visibility: hidden !important;
-        }
-        
-        /* Torna visível apenas o container da ficha e seus elementos internos */
-        .ficha-container, .ficha-container * {
-            visibility: visible !important;
-        }
-        
-        /* Posiciona e expande a ficha perfeitamente na folha de impressão */
-        .ficha-container {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            border: none !important;
-            box-shadow: none !important;
-            background: white !important;
-        }
-    }
-</style>
-""",
-    unsafe_allow_html=True,
 )
 
 catalogue_services = [
@@ -341,181 +295,298 @@ if "form_ot" not in st.session_state:
     st.session_state.form_km = "272 288"
     st.session_state.form_pere = "122170"
 
-col_esq, col_dir = st.columns([1, 1.3], gap="large")
+# Controle de visualização da Ficha isolada para impressão/PDF limpo
+if "modo_impressao" not in st.session_state:
+    st.session_state.modo_impressao = False
 
-with col_esq:
-    st.markdown("### 🔧 Fast Auto 91 — Sélection des Contrôles")
-
-    if st.button("🔄 Réinitialiser la Fiche (Tout Effacer)", type="primary"):
-        st.session_state.selecionados = []
-        st.session_state.form_ot = ""
-        st.session_state.form_chassis = ""
-        st.session_state.form_immat = ""
-        st.session_state.form_km = ""
-        st.session_state.form_pere = ""
+# Se o modo de impressão estiver ativo, exibimos APENAS a ficha de forma limpa em tela cheia
+if st.session_state.modo_impressao:
+    if st.button("⬅️ Voltar ao Painel Principal"):
+        st.session_state.modo_impressao = False
         st.rerun()
 
-    with st.expander("📝 Informations Générales du Véhicule", expanded=True):
-        st.session_state.form_ot = st.text_input(
-            "N° d'OT / Intervention", st.session_state.form_ot
-        )
-        st.session_state.form_client = st.text_input(
-            "Client / Réseau", st.session_state.form_client
-        )
-        st.session_state.form_type = st.text_input(
-            "Type d'Intervention", st.session_state.form_type
-        )
-        st.session_state.form_date = st.text_input(
-            "Date d'intervention", st.session_state.form_date
-        )
+    st.markdown(
+        """
+        <style>
+            /* Força fundo branco e remove elementos extras do Streamlit na visualização isolada */
+            .stApp { background-color: white !important; }
+            header { visibility: hidden; }
+        </style>
+    """,
+        unsafe_allow_html=True,
+    )
 
-        c1, c2 = st.columns(2)
-        with c1:
-            st.session_state.form_chassis = st.text_input(
-                "Châssis (N° de parc)", st.session_state.form_chassis
-            )
-            st.session_state.form_immat = st.text_input(
-                "Immatriculation / VIN", st.session_state.form_immat
-            )
-        with c2:
-            st.session_state.form_km = st.text_input(
-                "Kilométrage", st.session_state.form_km
-            )
-            st.session_state.form_pere = st.text_input(
-                "Équipement père", st.session_state.form_pere
-            )
+    # Montagem do HTML puro e limpo da Ficha para impressão direta
+    html_ficha = f"""
+    <div style="background: white; padding: 20px; font-family: sans-serif; color: black; max-width: 800px; margin: auto;">
+        <div style="display: flex; align-items: center; border-bottom: 2px solid #d32f2f; padding-bottom: 10px; margin-bottom: 15px;">
+            <div style="font-size: 20px; font-weight: bold; color: #d32f2f;">FAST AUTO 91 — RAPPORT D'INTERVENTION</div>
+        </div>
+        <div style="font-size: 11px; color: #444; margin-bottom: 15px;">
+            MÉCANIQUE V.L - P.L | Intervention sur site<br/>6 rue Gustave Madiot, 91070 Bondoufle
+        </div>
+        
+        <table style="width: 100%; font-size: 11pt; border-collapse: collapse; margin-bottom: 20px;">
+            <tr>
+                <td style="padding: 4px 0;"><b>Client / Réseau :</b> {st.session_state.form_client}</td>
+                <td style="padding: 4px 0;"><b>N° d'OT :</b> <span style="color: #d32f2f;">{st.session_state.form_ot}</span></td>
+            </tr>
+            <tr>
+                <td style="padding: 4px 0;"><b>Type d'intervention :</b> {st.session_state.form_type}</td>
+                <td style="padding: 4px 0;"><b>Date :</b> {st.session_state.form_date}</td>
+            </tr>
+            <tr>
+                <td style="padding: 4px 0;"><b>Châssis (N° de parc) :</b> <b>{st.session_state.form_chassis}</b></td>
+                <td style="padding: 4px 0;"><b>Équipement père :</b> {st.session_state.form_pere}</td>
+            </tr>
+            <tr>
+                <td style="padding: 4px 0;"><b>Immatriculation / VIN :</b> {st.session_state.form_immat}</td>
+                <td style="padding: 4px 0;"><b>Kilométrage :</b> {st.session_state.form_km}</td>
+            </tr>
+        </table>
 
-    st.markdown("---")
-    st.markdown("### ➕ Ajouter un service à la fiche")
+        <h4 style="border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 20px;">Contrôles et Observations (Sélectionnés)</h4>
+        
+        <table style="width: 100%; border-collapse: collapse; font-size: 10pt; margin-top: 10px;">
+            <thead>
+                <tr style="background-color: #f2f2f2; border-bottom: 1px solid #ddd;">
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left; width: 60%;">Activités (Ce qu'il y a à faire)</th>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: center; width: 15%;">Fait ? ([ X ])</th>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left; width: 25%;">Remarques / Observations</th>
+                </tr>
+            </thead>
+            <tbody>
+    """
 
-    filtro_busca = st.text_input("🔍 Rechercher un contrôle dans le catalogue...", "")
+    if st.session_state.selecionados:
+        for item_text in st.session_state.selecionados:
+            html_ficha += f"""
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 8px;">{item_text}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;"></td>
+                    <td style="border: 1px solid #ddd; padding: 8px;"></td>
+                </tr>
+            """
+    else:
+        html_ficha += """
+                <tr>
+                    <td colspan="3" style="border: 1px solid #ddd; padding: 12px; text-align: center; color: #666;">Aucun contrôle sélectionné.</td>
+                </tr>
+        """
 
-    itens_filtrados = [
-        item
-        for item in catalogue_services
-        if filtro_busca.lower() in item.lower()
-        and item not in st.session_state.selecionados
-    ]
+    html_ficha += """
+            </tbody>
+        </table>
 
-    container_scroll = st.container(height=300)
-    with container_scroll:
-        if not itens_filtrados:
-            st.info(
-                "Tous les services filtrés ont déjà été ajoutés ou aucun résultat"
-                " trouvé."
-            )
-        for item in itens_filtrados:
-            col_btn, col_txt = st.columns([1, 8])
-            if col_btn.button("➕", key=f"add_{item}"):
-                st.session_state.selecionados.append(item)
-                st.rerun()
-            col_txt.markdown(f"<small>{item}</small>", unsafe_allow_html=True)
+        <table style="width: 100%; margin-top: 40px; border-collapse: collapse;">
+            <tr>
+                <td style="border: 1px solid #bbb; padding: 10px; width: 48%; height: 60px; vertical-align: top; font-size: 10pt;">
+                    <b>Visa du Technicien / Fast Auto 91</b>
+                </td>
+                <td style="width: 4%;"></td>
+                <td style="border: 1px solid #bbb; padding: 10px; width: 48%; height: 60px; vertical-align: top; font-size: 10pt;">
+                    <b>Visa du Client / Exploitation</b>
+                </td>
+            </tr>
+        </table>
+    </div>
+    """
 
-    st.markdown("---")
-    st.markdown("### 🗑️ Retirer de la fiche")
-    if not st.session_state.selecionados:
-        st.write("Aucun contrôle sélectionné.")
+    st.markdown(html_ficha, unsafe_allow_html=True)
 
-    for idx, item_sel in enumerate(st.session_state.selecionados):
-        col_item, col_rem = st.columns([4, 1])
-        col_item.text(f"• {item_sel[:30]}...")
-        if col_rem.button("Retirer", key=f"rm_{idx}"):
-            st.session_state.selecionados.pop(idx)
+    # Dispara a janela de impressão nativa diretamente focada neste documento limpo
+    st.markdown(
+        """
+        <script>
+            window.print();
+        </script>
+    """,
+        unsafe_allow_html=True,
+    )
+
+else:
+    # Layout normal do aplicativo com as duas colunas
+    col_esq, col_dir = st.columns([1, 1.3], gap="large")
+
+    with col_esq:
+        st.markdown("### 🔧 Fast Auto 91 — Sélection des Contrôles")
+
+        if st.button("🔄 Réinitialiser la Fiche (Tout Effacer)", type="primary"):
+            st.session_state.selecionados = []
+            st.session_state.form_ot = ""
+            st.session_state.form_chassis = ""
+            st.session_state.form_immat = ""
+            st.session_state.form_km = ""
+            st.session_state.form_pere = ""
             st.rerun()
 
-with col_dir:
-    components.html(
-        """
-        <button onclick="window.parent.print();" style="width: 100%; background-color: #d32f2f; color: white; padding: 12px; border: none; border-radius: 5px; font-weight: bold; font-size: 15px; cursor: pointer; font-family: sans-serif; box-sizing: border-box;">
-            🖨️ Imprimer la Fiche d'Intervention
-        </button>
-    """,
-        height=50,
-    )
+        with st.expander("📝 Informations Générales du Véhicule", expanded=True):
+            st.session_state.form_ot = st.text_input(
+                "N° d'OT / Intervention", st.session_state.form_ot
+            )
+            st.session_state.form_client = st.text_input(
+                "Client / Réseau", st.session_state.form_client
+            )
+            st.session_state.form_type = st.text_input(
+                "Type d'Intervention", st.session_state.form_type
+            )
+            st.session_state.form_date = st.text_input(
+                "Date d'intervention", st.session_state.form_date
+            )
 
-    st.markdown(
-        "<div class='ficha-container' style='border: 1px solid #ccc; padding:"
-        " 20px; background: white; border-radius: 5px;'>",
-        unsafe_allow_html=True,
-    )
+            c1, c2 = st.columns(2)
+            with c1:
+                st.session_state.form_chassis = st.text_input(
+                    "Châssis (N° de parc)", st.session_state.form_chassis
+                )
+                st.session_state.form_immat = st.text_input(
+                    "Immatriculation / VIN", st.session_state.form_immat
+                )
+            with c2:
+                st.session_state.form_km = st.text_input(
+                    "Kilométrage", st.session_state.form_km
+                )
+                st.session_state.form_pere = st.text_input(
+                    "Équipement père", st.session_state.form_pere
+                )
 
-    col_logo, col_info = st.columns([1, 3.5])
-    with col_logo:
-        try:
-            st.image("input_file_8.png", width=95)
-        except:
-            st.write("🔧 **FAST AUTO**")
+        st.markdown("---")
+        st.markdown("### ➕ Ajouter un service à la fiche")
 
-    with col_info:
+        filtro_busca = st.text_input(
+            "🔍 Rechercher un contrôle dans le catalogue...", ""
+        )
+
+        itens_filtrados = [
+            item
+            for item in catalogue_services
+            if filtro_busca.lower() in item.lower()
+            and item not in st.session_state.selecionados
+        ]
+
+        container_scroll = st.container(height=300)
+        with container_scroll:
+            if not itens_filtrados:
+                st.info("Tous les services filtrés ont déjà été ajoutés.")
+            for item in itens_filtrados:
+                col_btn, col_txt = st.columns([1, 8])
+                if col_btn.button("➕", key=f"add_{item}"):
+                    st.session_state.selecionados.append(item)
+                    st.rerun()
+                col_txt.markdown(f"<small>{item}</small>", unsafe_allow_html=True)
+
+        st.markdown("---")
+        st.markdown("### 🗑️ Retirer de la fiche")
+        if not st.session_state.selecionados:
+            st.write("Aucun contrôle sélectionné.")
+
+        for idx, item_sel in enumerate(st.session_state.selecionados):
+            col_item, col_rem = st.columns([4, 1])
+            col_item.text(f"• {item_sel[:30]}...")
+            if col_rem.button("Retirer", key=f"rm_{idx}"):
+                st.session_state.selecionados.pop(idx)
+                st.rerun()
+
+    with col_dir:
+        # Botão dedicado que abre a página limpa isolada para impressão em PDF sem capturar a tela inteira
+        if st.button(
+            "🖨️ Générer la Fiche Propre pour Impression / PDF",
+            type="primary",
+            use_container_width=True,
+        ):
+            st.session_state.modo_impressao = True
+            st.rerun()
+
         st.markdown(
-            "<p class='main-header'>FAST AUTO 91 — RAPPORT D'INTERVENTION</p>",
+            "<div style='border: 1px solid #ccc; padding: 20px; background:"
+            " white; border-radius: 5px;'>",
             unsafe_allow_html=True,
         )
+
+        col_logo, col_info = st.columns([1, 3.5])
+        with col_logo:
+            try:
+                st.image("input_file_8.png", width=95)
+            except:
+                st.write("🔧 **FAST AUTO**")
+
+        with col_info:
+            st.markdown(
+                (
+                    "<p style='font-size: 18px; font-weight: bold; color:"
+                    " #d32f2f; text-transform: uppercase; margin-bottom: 0px;'>FAST"
+                    " AUTO 91 — RAPPORT D'INTERVENTION</p>"
+                ),
+                unsafe_allow_html=True,
+            )
+            st.markdown(
+                (
+                    "<p style='font-size: 12px; color: #444; margin-bottom:"
+                    " 10px;'>MÉCANIQUE V.L - P.L | Intervention sur site<br/>6"
+                    " rue Gustave Madiot, 91070 Bondoufle</p>"
+                ),
+                unsafe_allow_html=True,
+            )
+
         st.markdown(
-            "<p class='sub-header'>MÉCANIQUE V.L - P.L | Intervention sur"
-            " site<br/>6 rue Gustave Madiot, 91070 Bondoufle</p>",
+            f"""
+        <hr style='margin: 5px 0 10px 0;'>
+        <table style='width: 100%; font-size: 10pt;'>
+            <tr>
+                <td><b>Client / Réseau :</b> {st.session_state.form_client}</td>
+                <td><b>N° d'OT :</b> <span style='color: #d32f2f;'>{st.session_state.form_ot}</span></td>
+            </tr>
+            <tr>
+                <td><b>Type d'intervention :</b> {st.session_state.form_type}</td>
+                <td><b>Date :</b> {st.session_state.form_date}</td>
+            </tr>
+            <tr>
+                <td><b>Châssis (N° de parc) :</b> <b>{st.session_state.form_chassis}</b></td>
+                <td><b>Équipement père :</b> {st.session_state.form_pere}</td>
+            </tr>
+            <tr>
+                <td><b>Immatriculation / VIN :</b> {st.session_state.form_immat}</td>
+                <td><b>Kilométrage :</b> {st.session_state.form_km}</td>
+            </tr>
+        </table>
+        <hr style='margin: 10px 0;'>
+        """,
             unsafe_allow_html=True,
         )
 
-    st.markdown(
-        f"""
-    <hr style='margin: 5px 0 10px 0;'>
-    <table style='width: 100%; font-size: 10pt;'>
-        <tr>
-            <td><b>Client / Réseau :</b> {st.session_state.form_client}</td>
-            <td><b>N° d'OT :</b> <span style='color: #d32f2f;'>{st.session_state.form_ot}</span></td>
-        </tr>
-        <tr>
-            <td><b>Type d'intervention :</b> {st.session_state.form_type}</td>
-            <td><b>Date :</b> {st.session_state.form_date}</td>
-        </tr>
-        <tr>
-            <td><b>Châssis (N° de parc) :</b> <b>{st.session_state.form_chassis}</b></td>
-            <td><b>Équipement père :</b> {st.session_state.form_pere}</td>
-        </tr>
-        <tr>
-            <td><b>Immatriculation / VIN :</b> {st.session_state.form_immat}</td>
-            <td><b>Kilométrage :</b> {st.session_state.form_km}</td>
-        </tr>
-    </table>
-    <hr style='margin: 10px 0;'>
-    """,
-        unsafe_allow_html=True,
-    )
+        st.markdown("#### Contrôles et Observations (Sélectionnés)")
 
-    st.markdown("#### Contrôles et Observations (Sélectionnés)")
+        dados_tabela = []
+        for i, item_text in enumerate(st.session_state.selecionados):
+            dados_tabela.append({
+                "Activités (Ce qu'il y a à faire)": item_text,
+                "Fait ? ([ X ])": "",
+                "Remarques / Observations": "",
+            })
 
-    dados_tabela = []
-    for i, item_text in enumerate(st.session_state.selecionados):
-        dados_tabela.append({
-            "Activités (Ce qu'il y a à faire)": item_text,
-            "Fait ? ([ X ])": "",
-            "Remarques / Observations": "",
-        })
+        if dados_tabela:
+            df_exibicao = pd.DataFrame(dados_tabela)
+            st.table(df_exibicao)
+        else:
+            st.warning(
+                "Aucun contrôle ajouté pour le moment. Veuillez en sélectionner dans"
+                " la colonne de gauche."
+            )
 
-    if dados_tabela:
-        df_exibicao = pd.DataFrame(dados_tabela)
-        st.table(df_exibicao)
-    else:
-        st.warning(
-            "Aucun contrôle ajouté pour le moment. Veuillez en sélectionner dans"
-            " la colonne de gauche."
+        st.markdown(
+            """
+        <table style='width: 100%; margin-top: 25px; border-collapse: collapse;'>
+            <tr>
+                <td style='border: 1px solid #bbb; padding: 10px; width: 48%; height: 50px; vertical-align: top;'>
+                    <b>Visa du Technicien / Fast Auto 91</b>
+                </td>
+                <td style='width: 4%;'></td>
+                <td style='border: 1px solid #bbb; padding: 10px; width: 48%; height: 50px; vertical-align: top;'>
+                    <b>Visa du Client / Exploitation</b>
+                </td>
+            </tr>
+        </table>
+        </div>
+        """,
+            unsafe_allow_html=True,
         )
-
-    st.markdown(
-        """
-    <table style='width: 100%; margin-top: 25px; border-collapse: collapse;'>
-        <tr>
-            <td style='border: 1px solid #bbb; padding: 10px; width: 48%; height: 50px; vertical-align: top;'>
-                <b>Visa du Technicien / Fast Auto 91</b>
-            </td>
-            <td style='width: 4%;'></td>
-            <td style='border: 1px solid #bbb; padding: 10px; width: 48%; height: 50px; vertical-align: top;'>
-                <b>Visa du Client / Exploitation</b>
-            </td>
-        </tr>
-    </table>
-    </div>
-    """,
-        unsafe_allow_html=True,
-    )
