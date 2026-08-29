@@ -21,31 +21,26 @@ st.markdown("""
     
     /* --- CONFIGURAÇÃO DE IMPRESSÃO LIMPA (APENAS A FICHA) --- */
     @media print {
-        /* Oculta elementos indesejados da interface do Streamlit e a coluna esquerda */
-        #MainMenu, header, footer, .no-print, div[data-testid="stSidebar"] {
-            display: none !important;
+        /* Oculta absolutamente tudo na página por padrão */
+        body * {
+            visibility: hidden !important;
         }
         
-        /* Oculta tudo exceto a coluna da direita contendo a ficha */
-        section.main > div:first-child {
-            display: none !important;
+        /* Torna visível apenas a ficha de impressão e seus elementos internos */
+        .printable-sheet, .printable-sheet * {
+            visibility: visible !important;
         }
         
-        /* Força a área da ficha a ocupar 100% da tela de impressão sem margens sobrando */
-        body {
-            background-color: white !important;
-            color: black !important;
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-        
+        /* Posiciona a ficha no topo da página de impressão ocupando toda a largura */
         .printable-sheet {
-            border: none !important;
-            padding: 0 !important;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
             width: 100% !important;
-            position: absolute;
-            left: 0;
-            top: 0;
+            margin: 0 !important;
+            padding: 10px !important;
+            border: none !important;
+            background: white !important;
         }
     }
 </style>
@@ -296,10 +291,13 @@ with col_esq:
     st.markdown('</div>', unsafe_allow_html=True)
 
 with col_dir:
-    # Botão direto para acionar a impressão apenas da ficha
+    # Botão de impressão nativo em HTML que funciona perfeitamente
     st.markdown('<div class="no-print">', unsafe_allow_html=True)
-    if st.button("🖨️ Imprimer la Fiche d'Intervention", type="primary", use_container_width=True):
-        st.markdown('<script>window.print();</script>', unsafe_allow_html=True)
+    st.markdown("""
+        <button onclick="window.print();" style="width: 100%; background-color: #d32f2f; color: white; padding: 10px; border: none; border-radius: 5px; font-weight: bold; font-size: 15px; cursor: pointer; margin-bottom: 15px;">
+            🖨️ Imprimer la Fiche d'Intervention
+        </button>
+    """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("<div class='printable-sheet' style='border: 1px solid #ccc; padding: 20px; background: white; border-radius: 5px;'>", unsafe_allow_html=True)
@@ -344,7 +342,7 @@ with col_dir:
     for i, item_text in enumerate(st.session_state.selecionados):
         dados_tabela.append({
             "Activités (Ce qu'il y a à faire)": item_text,
-            "Fait ? ([  ] / [ X ])": "",
+            "Fait ? ([ X ])": "",
             "Remarques / Observations": ""
         })
 
